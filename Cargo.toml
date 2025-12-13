@@ -6,5 +6,6 @@ edition = "2024"
 [dependencies]
 axum = { version = "0.8.7", features = ["multipart"] }
 extractous = "0.3.0"
+kiru = "0.1.11"
 serde_json = "1.0.145"
 tokio = { version = "1.48.0", features = ["full"] }
