@@ -1,4 +1,3 @@
-mod batch_handler;
 mod benchmark;
 mod chunker;
 mod handler;
@@ -10,7 +9,6 @@ use axum::{
     Router,
     routing::{get, post},
 };
-use batch_handler::batch_handler;
 use handler::request_handler;
 use std::fs;
 
@@ -28,12 +26,10 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(|| async { "Hello, World!" }))
-        .route("/upload", post(request_handler))
-        .route("/batch", post(batch_handler));
+        .route("/upload", post(request_handler));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3001").await.unwrap();
     println!("Server running on http://0.0.0.0:3001");
-    println!("  POST /upload - Upload and process single file");
-    println!("  POST /batch  - Process multiple files in parallel");
+    println!("  POST /upload - Upload and process one or many files in parallel");
     axum::serve(listener, app).await.unwrap();
 }

@@ -13,7 +13,16 @@ pub fn sanitize_filename(filename: &str) -> String {
         )
 }
 
-pub async fn upload_file(mut multipart: Multipart) -> Result<(String, Vec<u8>), String> {
+pub struct UploadedFile {
+    pub file_path: String,
+    pub file_name: String,
+    pub size: usize,
+}
+
+/// Upload multiple files from a multipart request
+pub async fn upload_files(mut multipart: Multipart) -> Result<Vec<UploadedFile>, String> {
+    let mut uploaded_files = Vec::new();
+
     while let Ok(Some(field)) = multipart.next_field().await {
         let file_name = match field.file_name() {
             Some(name) => sanitize_filename(name),
@@ -35,12 +44,21 @@ pub async fn upload_file(mut multipart: Multipart) -> Result<(String, Vec<u8>), 
         let file_path = format!("./uploads/{}", file_name);
         if let Err(err) = fs::write(&file_path, &data) {
             eprintln!("Error writing file: {:?}", err);
-            return Err("Failed to save file".to_string());
+            return Err(format!("Failed to save file {}: {}", file_name, err));
         }
 
         println!("Uploaded file: {} ({} bytes)", file_name, data.len());
-        return Ok((file_path, data));
+
+        uploaded_files.push(UploadedFile {
+            file_path,
+            file_name,
+            size: data.len(),
+        });
     }
 
-    Err("No file provided".to_string())
+    if uploaded_files.is_empty() {
+        return Err("No files provided".to_string());
+    }
+
+    Ok(uploaded_files)
 }
